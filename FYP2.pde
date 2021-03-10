@@ -9,7 +9,9 @@ String val1; //// Temperature data received from serial port
 float valf = 0;// val value in float format (humidity)
 float valf1 = 0; //val value in float format (temperature)
 int flag = 0; // flag for sorting humidty and temperature values when being read in
-int d, m, y; // integer values for date, month and year
+int day, month, year; // integer values for date, month and year
+int second, hour, minute;
+int second1, minute1, hour1;
 int timeflag = 0;
 Timestamp timestamp_last;
 
@@ -27,6 +29,8 @@ int tempmax; // maximum temperature value for graph
 int hummax; //maximum humidity value for graph
 PFont f;//font variable
 PrintWriter output; // csv file for storing humidity values
+Timestamp timestamp1;
+
 
 
 void setup()
@@ -48,12 +52,14 @@ void setup()
   
   f = createFont("Arial",16,true); //Assigning font, size
   output = createWriter("temp.csv"); // creating csv file
-  d = day();// retrieving current date
-  m = month(); // retrieving current month
-  y = year(); // retrieving current year
+  day = day();// retrieving current date
+  month = month(); // retrieving current month
+  year = year(); // retrieving current year
+  
+  
   
   output.print("Date" + ","); //Printing date to top of csv file
-  output.println(y + "-" + m + "-" + d);//Printing date to top of csv file
+  output.println(year + "-" + month + "-" + day);//Printing date to top of csv file
   output.print("Time" + ","); // Write the coordinate to the file
   output.print("Humidity" + ","); // Write the coordinate to the file
   output.println("Temperature"); // Write the coordinate to the file 
@@ -87,27 +93,47 @@ void draw()
   text("0", (width/2), height-30);
   text("50", (width/2), 385);
   java.lang.String d;
-  if(timeflag == 0);
-  {
-    d = sdf.format(timestamp);
-    timeflag = 1;
-    
-  }
-  text(d, 20, 700);
+  println(second);
   
- 
-  
-  
-
   //Reading in values, storing and displaying them
   if ( myPort.available() > 0) 
   {  
+    
+    if(i == 0)
+    {
+        second = second();  // Values from 0 - 59
+        minute = minute();  // Values from 0 - 59
+        hour = hour();    // Values from 0 - 23
+        if(second >= 20)
+        {
+          second1 = second - 20;
+          minute1 = minute+2;
+          hour1 = hour;
+          if (minute1>=60)
+          {
+            minute1 = minute1-60;
+            hour1 = hour +1;
+          }
+        }
+        else
+        {
+          second1 = second +40;
+          minute1 = minute+1;
+          hour1 = hour;
+          if (minute1>=60)
+          {
+            minute1 = minute1-60;
+            hour1 = hour +1;
+          }
+        }
+    }
+    
     if ( flag == 0) 
     {
        
       val = myPort.readStringUntil('\n'); //read in humidity value
       valf = float(val); // convery humidty value from string to float
-       if(timestamp!= timestamp_last)// if the humidty or temperature value has change wipe the screen for new vaues to be written
+      if(timestamp!= timestamp_last)// if the humidty or temperature value has change wipe the screen for new vaues to be written
       {
         background(255);
       }
@@ -118,6 +144,15 @@ void draw()
       //Displaying humidity value in real time
       text("Humidity: " + valf,(3*width)/4,30);
       text("Humidity per centage versus Time",(3*width)/4,50);
+      text(hour+":"+minute+":"+second, 30, 695);
+      text(hour+":"+minute+":"+second, (width/2) + 30, 695);
+      
+      text(hour1+":"+minute1+":"+second1, (width/2) - 30, 695);
+      text(hour1+":"+minute1+":"+second1, (width) - 30, 695);
+      
+      
+      
+      
       
      }
     
@@ -145,7 +180,7 @@ void draw()
      output.println(valf1 + ","); // Write the coordinate to the file 
      output.flush(); // Writes the remaining data to the file
      
-     text("Date: " + y + "-" + m + "-" + d + "    Time: " + sdf.format(timestamp), (width)/2,80);
+     text("Date: " + year + "-" + month + "-" + day + "    Time: " + sdf.format(timestamp), (width)/2,80);
     
     for(n=0; n<i; n++)
     {
