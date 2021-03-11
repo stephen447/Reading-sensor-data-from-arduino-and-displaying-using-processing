@@ -10,14 +10,14 @@ float valf = 0;// val value in float format (humidity)
 float valf1 = 0; //val value in float format (temperature)
 int flag = 0; // flag for sorting humidty and temperature values when being read in
 int day, month, year; // integer values for date, month and year
-int second, hour, minute;
-int second1, minute1, hour1;
+int second, hour, minute; // X axis label
+int second1, minute1, hour1; //Y axis label
 int timeflag = 0;
-Timestamp timestamp_last;
+Timestamp timestamp_last; // Timestamp for comparing each time stamp
 
-float[] humidityarray = new float[100]; // array for storing humidity values
-float[] temparray = new float[100]; //array for storing temperature values
-int[] xarray = new int[100]; // integer values for x axis
+float[] humidityarray = new float[1800]; // array for storing humidity values(30 min)
+float[] temparray = new float[1800]; //array for storing temperature values(30 min)
+int[] xarray = new int[1800]; // integer values for x axis (1800)
 
 int i = 0; // index for storing values in arrays
 int n = 0; // index for going through arrays for graph
@@ -27,9 +27,9 @@ int hummin; // minimum humidty value for graph
 int xmax; // maximum x value for graph
 int tempmax; // maximum temperature value for graph
 int hummax; //maximum humidity value for graph
-PFont f;//font variable
+PFont f, f1;//font variable
 PrintWriter output; // csv file for storing humidity values
-Timestamp timestamp1;
+
 
 
 
@@ -40,24 +40,24 @@ void setup()
   String portName = Serial.list()[3]; //change the 0 to a 1 or 2 etc. to match your port
   myPort = new Serial(this, portName, 9600);
   
-  textAlign(CENTER); // a;igns text to center
+  textAlign(CENTER); // aligns text to center
   size(900, 700); // size of output window
+  
   //Assigning different values for min and max values of parameters
   xmin = 0;
   tempmin = 0;
   hummin = 0;
-  xmax = 100;
+  xmax = 60;
   tempmax = 30;
   hummax = 100;
   
-  f = createFont("Arial",16,true); //Assigning font, size
+  f = createFont("AvenirNext-Regular",12,true); //Assigning font, size
   output = createWriter("temp.csv"); // creating csv file
   day = day();// retrieving current date
   month = month(); // retrieving current month
   year = year(); // retrieving current year
   
-  
-  
+ 
   output.print("Date" + ","); //Printing date to top of csv file
   output.println(year + "-" + month + "-" + day);//Printing date to top of csv file
   output.print("Time" + ","); // Write the coordinate to the file
@@ -71,8 +71,8 @@ void setup()
 void draw()
 {
   
-  Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-  SimpleDateFormat sdf = new SimpleDateFormat( "HH:mm:ss" );
+  Timestamp timestamp = new Timestamp(System.currentTimeMillis()); // get current time and store it in timestamp
+  SimpleDateFormat sdf = new SimpleDateFormat( "HH:mm:ss" ); // creating format for date according to ISO standards
  
   // text colour, font, 
   stroke(175);
@@ -80,10 +80,10 @@ void draw()
   fill(40);
   
   //Axis for graphs
-  line(30, 100, 30, height-30); //x axis 
-  line((width/2)+15, 100, (width/2)+15, height-30);
-  line(30, height-30, (width/2)-15, height-30);
-  line((width/2)+15, height-30, width-15, height-30);
+  line(30, 100, 30, height-30); //x axis temp
+  line((width/2)+15, 100, (width/2)+15, height-30); //x axis hum
+  line(30, height-30, (width/2)-15, height-30);// y axis temp
+  line((width/2)+15, height-30, width-15, height-30); // y axis hum
   
   //Graph labels
   text("30", 15, 100);
@@ -92,8 +92,22 @@ void draw()
   text("100", (width/2), 100);
   text("0", (width/2), height-30);
   text("50", (width/2), 385);
-  java.lang.String d;
-  println(second);
+  text("Time(Hours, minutes, seconds)", width/4, 690);
+  text("Time(Hours, minutes, seconds)", (3*width)/4, 690);
+  
+  // Rotating text of Humidity y axis label
+  pushMatrix();
+  translate(450, 300);
+  rotate(PI/2);
+  text("Humidity (per cent)", 0, 0);
+  popMatrix();
+  
+  // Rotating text of Temperature y axis label
+  pushMatrix();
+  translate(10, 250);
+  rotate(PI/2);
+  text("Temperature (Degrees Celcius)", 0, 0);
+  popMatrix();
   
   //Reading in values, storing and displaying them
   if ( myPort.available() > 0) 
@@ -104,27 +118,24 @@ void draw()
         second = second();  // Values from 0 - 59
         minute = minute();  // Values from 0 - 59
         hour = hour();    // Values from 0 - 23
-        if(second >= 20)
+        second1 = second;
+        hour1 = hour;
+        // Finding the end value for x axis of both graphs
+        if(minute == 59)
         {
-          second1 = second - 20;
-          minute1 = minute+2;
-          hour1 = hour;
-          if (minute1>=60)
+          minute1 = 00;
+          if (hour == 23)
           {
-            minute1 = minute1-60;
-            hour1 = hour +1;
+            hour1 = 00;
+          }
+          else
+          {
+            hour1 = hour+1;
           }
         }
         else
         {
-          second1 = second +40;
           minute1 = minute+1;
-          hour1 = hour;
-          if (minute1>=60)
-          {
-            minute1 = minute1-60;
-            hour1 = hour +1;
-          }
         }
     }
     
@@ -133,26 +144,22 @@ void draw()
        
       val = myPort.readStringUntil('\n'); //read in humidity value
       valf = float(val); // convery humidty value from string to float
-      if(timestamp!= timestamp_last)// if the humidty or temperature value has change wipe the screen for new vaues to be written
+      if(timestamp!= timestamp_last)// if the time value has changed wipe the screen for new vaues to be written
       {
         background(255);
       }
-      timestamp_last = timestamp;
+      timestamp_last = timestamp;// save current time timestamp as the last timestamp for the next round
 
       humidityarray[i] = valf; //store value read in in humidity array
-      flag = 1; // set flad so temperature value can be read in
-      //Displaying humidity value in real time
-      text("Humidity: " + valf,(3*width)/4,30);
-      text("Humidity per centage versus Time",(3*width)/4,50);
+      flag = 1; // set flag to 1, so temperature value can be read in
+      
+      text("Humidity: " + valf,(3*width)/4,30); //Displaying humidity value in real time
+      text("Humidity per centage versus Time",(3*width)/4,50); //
       text(hour+":"+minute+":"+second, 30, 695);
       text(hour+":"+minute+":"+second, (width/2) + 30, 695);
       
       text(hour1+":"+minute1+":"+second1, (width/2) - 30, 695);
       text(hour1+":"+minute1+":"+second1, (width) - 30, 695);
-      
-      
-      
-      
       
      }
     
@@ -166,33 +173,52 @@ void draw()
       //Displaying temperature value in real time
       text("Temperature: " + valf1,(width)/4,30);
       text("Temperature in degrees versus Time",(width)/4,50);
-      
-      
+
       xarray[i] = i; //store value in for x axis
       i++; // increment counter
       
      }
-     
-             
      
      output.print(sdf.format(timestamp)+",");
      output.print(valf + ","); // Write the coordinate to the file
      output.println(valf1 + ","); // Write the coordinate to the file 
      output.flush(); // Writes the remaining data to the file
      
-     text("Date: " + year + "-" + month + "-" + day + "    Time: " + sdf.format(timestamp), (width)/2,80);
+    text("Date: " + year + "-" + month + "-" + day + "    Time: " + sdf.format(timestamp), (width)/2,80);
+    
+    if(i>=xmax)
+    {
+      xmax = xmax+60;// scaling the graphs
+      //Adjusting the axis values
+      if(minute1 == 59)
+        {
+          minute1 = 00;
+          if (hour1 == 23)
+          {
+            hour1 = 00;
+          }
+          else
+          {
+            hour1 = hour+1;
+          }
+        }
+        else
+        {
+          minute1 = minute1+1;
+        }
+    }
     
     for(n=0; n<i; n++)
     {
-    float xpos1 = map(xarray[n], xmin, xmax, 30, (width/2)-15);
-    float xpos2 = map(xarray[n], xmin, xmax, (width/2)+15, width-30);
-    float humy = map(100-humidityarray[n], hummin, hummax, 100, height-30);
-    float tempy = map(30-temparray[n], tempmin, tempmax, 100, height-30);
+    float xpos1 = map(xarray[n], xmin, xmax, 30, (width/2)-15);// temperature x values
+    float xpos2 = map(xarray[n], xmin, xmax, (width/2)+15, width-30);// humidity x values
+    float humy = map(100-humidityarray[n], hummin, hummax, 100, height-30); //humidity values
+    float tempy = map(30-temparray[n], tempmin, tempmax, 100, height-30); // temperature values
     
    
-    noStroke();
-    ellipse(xpos1,tempy,4,4);
-    ellipse(xpos2,humy,4,4);
+    //noStroke();
+    ellipse(xpos1,tempy,2,2); // elipse for temperaure data points
+    ellipse(xpos2,humy,2,2); //elipse for humidityvdata point
     
     }
   } 
