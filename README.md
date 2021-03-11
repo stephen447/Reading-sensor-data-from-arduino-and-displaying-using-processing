@@ -13,5 +13,5 @@ I will be using
 4.	Load the processing file in processing and run the file. A window should appear with 2 graphs, of temperature versus time and humidity versus time. A csv file will created in the processing project director called temp.csv. This will contain a table with the time and the corresponding temperature and humidity values in degrees celcius and per cent respectivly.
 
 
-![image](https://user-images.githubusercontent.com/62932312/110782273-d78fe300-825e-11eb-9983-4b1c871acb9b.png)
+
 
