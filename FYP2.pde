@@ -65,11 +65,12 @@ void setup()
   output = createWriter(year+";"+month+";"+day+"-"+hour+":"+minute+":"+second+".csv"); // creating csv file
   
  
-  output.print("Date" + ","); //Printing date to top of csv file
-  output.println(year + "-" + month + "-" + day);//Printing date to top of csv file
+  //output.print("Date" + ","); //Printing date to top of csv file
+  //output.println(year + "-" + month + "-" + day);//Printing date to top of csv file
   output.print("Time" + ","); // Write the coordinate to the file
   output.print("Humidity" + ","); // Write the coordinate to the file
-  output.println("Temperature"); // Write the coordinate to the file 
+  output.print("Temperature"+","); // Write the coordinate to the file 
+  output.println("Exterior Temperature"); // Write the coordinate to the file 
   output.flush(); // Writes the remaining data to the file
   
 }
@@ -120,7 +121,7 @@ void draw()
   xml = loadXML("http://metwdb-openaccess.ichec.ie/metno-wdb2ts/locationforecast?lat=53.44;long=-6.18;");
   xmlstring = xml.format(0);
   int start = xmlstring.indexOf("temperature" ) + 43;
-  int end        = xmlstring.indexOf(">", start);      // STEP 2
+  int end        = xmlstring.indexOf(">", start)-2;      // STEP 2
   String exttemp  = xmlstring.substring(start, end);    // STEP 3
   float exttempf   = int(exttemp);  // STEP 4
   exttemparray[i] = exttempf;
@@ -199,9 +200,9 @@ void draw()
      }
      
      output.print(sdf.format(timestamp)+",");
-     output.print(valf + ","); // Write the coordinate to the file
-     output.print(valf1 + ","); // Write the coordinate to the file 
-     output.print(exttemp +",");
+     output.print(valf+"," ); // Write the coordinate to the file
+     output.print(valf1+"," ); // Write the coordinate to the file 
+     output.println(exttemp +",");
      output.flush(); // Writes the remaining data to the file
      
     text("Date: " + year + "-" + month + "-" + day + "    Time: " + sdf.format(timestamp), (width)/2,80);
