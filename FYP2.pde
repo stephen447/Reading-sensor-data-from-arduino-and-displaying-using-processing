@@ -28,8 +28,8 @@ int xmax; // maximum x value for graph
 int tempmax; // maximum temperature value for graph
 int hummax; //maximum humidity value for graph
 PFont f, f1;//font variable
-PrintWriter output; // csv file for storing humidity values
-
+PrintWriter output, output1; // csv file for storing humidity values
+Table table;
 
 
 
@@ -52,10 +52,20 @@ void setup()
   hummax = 100;
   
   f = createFont("AvenirNext-Regular",12,true); //Assigning font, size
-  output = createWriter("temp.csv"); // creating csv file
+  //output = createWriter("temp.csv"); // creating csv file
   day = day();// retrieving current date
   month = month(); // retrieving current month
   year = year(); // retrieving current year
+  table = loadTable("temp.csv");
+  //Table table1 = loadTable("csv_tester.csv");
+  //TableRow row = table.getRow(1);
+  
+  output = createWriter("temp.csv"); // creating csv file
+  //saveTable(table, "/Users/stephenbyrne/Documents/Processing/FYP2/csv_tester.csv");
+  //join(table, table1);
+  //output1 = createWriter("csvtester.csv"); // creating csv file
+  
+  
   
  
   output.print("Date" + ","); //Printing date to top of csv file
@@ -139,6 +149,7 @@ void draw()
         }
     }
     
+   
     if ( flag == 0) 
     {
        
@@ -178,7 +189,11 @@ void draw()
       i++; // increment counter
       
      }
-     
+     TableRow newRow = table.addRow();
+     newRow.setString("Time", sdf.format(timestamp));
+     newRow.setString("Humidity", val);
+     newRow.setString("Temperature", val1);
+     saveTable(table, "/Users/stephenbyrne/Documents/Processing/FYP2/csv_tester.csv");
      output.print(sdf.format(timestamp)+",");
      output.print(valf + ","); // Write the coordinate to the file
      output.println(valf1 + ","); // Write the coordinate to the file 
@@ -207,6 +222,9 @@ void draw()
           minute1 = minute1+1;
         }
     }
+    
+    //Table table = loadTable("temp.csv");
+    //println(table);
     
     for(n=0; n<i; n++)
     {
