@@ -14,10 +14,13 @@ int second, hour, minute; // X axis label
 int second1, minute1, hour1; //Y axis label
 int timeflag = 0;
 Timestamp timestamp_last; // Timestamp for comparing each time stamp
+XML xml;
+String xmlstring;
 
-float[] humidityarray = new float[1800]; // array for storing humidity values(30 min)
-float[] temparray = new float[1800]; //array for storing temperature values(30 min)
-int[] xarray = new int[1800]; // integer values for x axis (1800)
+float[] humidityarray = new float[10800]; // array for storing humidity values(30 min)
+float[] temparray = new float[10800]; //array for storing temperature values(30 min)
+int[] xarray = new int[10800]; // integer values for x axis (1800)
+float[] exttemparray = new float[10800];
 
 int i = 0; // index for storing values in arrays
 int n = 0; // index for going through arrays for graph
@@ -28,8 +31,8 @@ int xmax; // maximum x value for graph
 int tempmax; // maximum temperature value for graph
 int hummax; //maximum humidity value for graph
 PFont f, f1;//font variable
-PrintWriter output, output1; // csv file for storing humidity values
-Table table;
+PrintWriter output; // csv file for storing humidity values
+
 
 
 
@@ -56,16 +59,10 @@ void setup()
   day = day();// retrieving current date
   month = month(); // retrieving current month
   year = year(); // retrieving current year
-  table = loadTable("temp.csv");
-  //Table table1 = loadTable("csv_tester.csv");
-  //TableRow row = table.getRow(1);
-  
-  output = createWriter("temp.csv"); // creating csv file
-  //saveTable(table, "/Users/stephenbyrne/Documents/Processing/FYP2/csv_tester.csv");
-  //join(table, table1);
-  //output1 = createWriter("csvtester.csv"); // creating csv file
-  
-  
+  second = second();  // Values from 0 - 59
+  minute = minute();  // Values from 0 - 59
+  hour = hour(); 
+  output = createWriter(year+";"+month+";"+day+"-"+hour+":"+minute+":"+second+".csv"); // creating csv file
   
  
   output.print("Date" + ","); //Printing date to top of csv file
@@ -119,15 +116,28 @@ void draw()
   text("Temperature (Degrees Celcius)", 0, 0);
   popMatrix();
   
+  //exterior temperature using MET Eireann API
+  xml = loadXML("http://metwdb-openaccess.ichec.ie/metno-wdb2ts/locationforecast?lat=53.44;long=-6.18;");
+  xmlstring = xml.format(0);
+  int start = xmlstring.indexOf("temperature" ) + 43;
+  int end        = xmlstring.indexOf(">", start);      // STEP 2
+  String exttemp  = xmlstring.substring(start, end);    // STEP 3
+  float exttempf   = int(exttemp);  // STEP 4
+  exttemparray[i] = exttempf;
+  //int start1 = s.indexOf("<humidity" ) + 32;
+  //int end1        = s.indexOf(">", start1);      // STEP 2
+  //String apples1  = s.substring(start1, end1);    // STEP 3
+  //float apple_no1   = int(apples1); 
+  
   //Reading in values, storing and displaying them
   if ( myPort.available() > 0) 
   {  
     
     if(i == 0)
     {
-        second = second();  // Values from 0 - 59
-        minute = minute();  // Values from 0 - 59
-        hour = hour();    // Values from 0 - 23
+        //second = second();  // Values from 0 - 59
+        //minute = minute();  // Values from 0 - 59
+        //hour = hour();    // Values from 0 - 23
         second1 = second;
         hour1 = hour;
         // Finding the end value for x axis of both graphs
@@ -149,7 +159,6 @@ void draw()
         }
     }
     
-   
     if ( flag == 0) 
     {
        
@@ -168,7 +177,6 @@ void draw()
       text("Humidity per centage versus Time",(3*width)/4,50); //
       text(hour+":"+minute+":"+second, 30, 695);
       text(hour+":"+minute+":"+second, (width/2) + 30, 695);
-      
       text(hour1+":"+minute1+":"+second1, (width/2) - 30, 695);
       text(hour1+":"+minute1+":"+second1, (width) - 30, 695);
       
@@ -189,17 +197,15 @@ void draw()
       i++; // increment counter
       
      }
-     TableRow newRow = table.addRow();
-     newRow.setString("Time", sdf.format(timestamp));
-     newRow.setString("Humidity", val);
-     newRow.setString("Temperature", val1);
-     saveTable(table, "/Users/stephenbyrne/Documents/Processing/FYP2/csv_tester.csv");
+     
      output.print(sdf.format(timestamp)+",");
      output.print(valf + ","); // Write the coordinate to the file
-     output.println(valf1 + ","); // Write the coordinate to the file 
+     output.print(valf1 + ","); // Write the coordinate to the file 
+     output.print(exttemp +",");
      output.flush(); // Writes the remaining data to the file
      
     text("Date: " + year + "-" + month + "-" + day + "    Time: " + sdf.format(timestamp), (width)/2,80);
+    text("Exterior temperature"+exttempf, (width/2), 50);
     
     if(i>=xmax)
     {
@@ -223,20 +229,20 @@ void draw()
         }
     }
     
-    //Table table = loadTable("temp.csv");
-    //println(table);
-    
     for(n=0; n<i; n++)
     {
     float xpos1 = map(xarray[n], xmin, xmax, 30, (width/2)-15);// temperature x values
     float xpos2 = map(xarray[n], xmin, xmax, (width/2)+15, width-30);// humidity x values
     float humy = map(100-humidityarray[n], hummin, hummax, 100, height-30); //humidity values
     float tempy = map(30-temparray[n], tempmin, tempmax, 100, height-30); // temperature values
+    float exttempy = map(30-exttemparray[n], tempmin, tempmax, 100, height-30); // temperature values
     
    
     //noStroke();
     ellipse(xpos1,tempy,2,2); // elipse for temperaure data points
+    ellipse(xpos1,exttempy,2,2); // elipse for temperaure data points
     ellipse(xpos2,humy,2,2); //elipse for humidityvdata point
+
     
     }
   } 
