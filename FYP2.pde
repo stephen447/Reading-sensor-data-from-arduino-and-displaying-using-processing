@@ -15,12 +15,15 @@ int second1, minute1, hour1; //Y axis label
 int timeflag = 0;
 Timestamp timestamp_last; // Timestamp for comparing each time stamp
 XML xml;
-String xmlstring;
+String xmlstring, xmlstring_last;
+float lastvalf1 = 0;
+float lastvalf = 0;
 
 float[] humidityarray = new float[10800]; // array for storing humidity values(30 min)
 float[] temparray = new float[10800]; //array for storing temperature values(30 min)
 int[] xarray = new int[10800]; // integer values for x axis (1800)
 float[] exttemparray = new float[10800];
+float[] exthumidityarray = new float[10800];
 
 int i = 0; // index for storing values in arrays
 int n = 0; // index for going through arrays for graph
@@ -68,9 +71,10 @@ void setup()
   //output.print("Date" + ","); //Printing date to top of csv file
   //output.println(year + "-" + month + "-" + day);//Printing date to top of csv file
   output.print("Time" + ","); // Write the coordinate to the file
-  output.print("Humidity" + ","); // Write the coordinate to the file
-  output.print("Temperature"+","); // Write the coordinate to the file 
-  output.println("Exterior Temperature"); // Write the coordinate to the file 
+  output.print("Humidity (%)" + ","); // Write the coordinate to the file
+  output.print("Temperature (°C)"+","); // Write the coordinate to the file 
+  output.print("Exterior Humidity(%)"+","); // Write the coordinate to the file 
+  output.println("Exterior Temperature (°C)"); // Write the coordinate to the file 
   output.flush(); // Writes the remaining data to the file
   
 }
@@ -119,16 +123,26 @@ void draw()
   
   //exterior temperature using MET Eireann API
   xml = loadXML("http://metwdb-openaccess.ichec.ie/metno-wdb2ts/locationforecast?lat=53.44;long=-6.18;");
+  if(xml == null)
+  {
+    xmlstring = xmlstring_last;
+  }
+  else
+  {
   xmlstring = xml.format(0);
+  }
+  
+  xmlstring_last = xmlstring;
   int start = xmlstring.indexOf("temperature" ) + 43;
   int end        = xmlstring.indexOf(">", start)-2;      // STEP 2
   String exttemp  = xmlstring.substring(start, end);    // STEP 3
   float exttempf   = int(exttemp);  // STEP 4
   exttemparray[i] = exttempf;
-  //int start1 = s.indexOf("<humidity" ) + 32;
-  //int end1        = s.indexOf(">", start1);      // STEP 2
-  //String apples1  = s.substring(start1, end1);    // STEP 3
-  //float apple_no1   = int(apples1); 
+  int start1 = xmlstring.indexOf("<humidity" ) + 32;
+  int end1        = xmlstring.indexOf(">", start1)-2;      // STEP 2
+  String exthumidity  = xmlstring.substring(start1, end1);    // STEP 3
+  float exthumidityf   = int(exthumidity); 
+  exthumidityarray[i] = exthumidityf;
   
   //Reading in values, storing and displaying them
   if ( myPort.available() > 0) 
@@ -164,7 +178,15 @@ void draw()
     {
        
       val = myPort.readStringUntil('\n'); //read in humidity value
+      if(val == null)
+      {
+        valf = lastvalf;
+      }
+      else
+      {
       valf = float(val); // convery humidty value from string to float
+      }
+      
       if(timestamp!= timestamp_last)// if the time value has changed wipe the screen for new vaues to be written
       {
         background(255);
@@ -173,6 +195,7 @@ void draw()
 
       humidityarray[i] = valf; //store value read in in humidity array
       flag = 1; // set flag to 1, so temperature value can be read in
+      lastvalf = valf;
       
       text("Humidity: " + valf,(3*width)/4,30); //Displaying humidity value in real time
       text("Humidity per centage versus Time",(3*width)/4,50); //
@@ -186,7 +209,14 @@ void draw()
     if ( flag == 1) 
     {
       val1 = myPort.readStringUntil('\n'); //read in temperature value
+      if(val1 == null)
+      {
+        valf1 = lastvalf1;
+      }
+      else
+      {
       valf1 = float(val1); //convert value to a float
+      }
       temparray[i] = valf1;// store value in array
       flag = 0; // change flag to read in temperature next
       
@@ -196,17 +226,20 @@ void draw()
 
       xarray[i] = i; //store value in for x axis
       i++; // increment counter
+      lastvalf1 = valf1;
       
      }
      
-     output.print(sdf.format(timestamp)+",");
+     output.print(year+"-"+month+"-"+day+" "+sdf.format(timestamp)+",");
      output.print(valf+"," ); // Write the coordinate to the file
      output.print(valf1+"," ); // Write the coordinate to the file 
+     output.print(exthumidity +",");
      output.println(exttemp +",");
      output.flush(); // Writes the remaining data to the file
      
     text("Date: " + year + "-" + month + "-" + day + "    Time: " + sdf.format(timestamp), (width)/2,80);
-    text("Exterior temperature"+exttempf, (width/2), 50);
+    text("Exterior temperature: "+exttempf, (width/2), 50);
+    text("Exterior Humidity: "+exthumidityf, (width/2), 20);
     
     if(i>=xmax)
     {
@@ -237,13 +270,14 @@ void draw()
     float humy = map(100-humidityarray[n], hummin, hummax, 100, height-30); //humidity values
     float tempy = map(30-temparray[n], tempmin, tempmax, 100, height-30); // temperature values
     float exttempy = map(30-exttemparray[n], tempmin, tempmax, 100, height-30); // temperature values
+    float exthumy = map(100-exthumidityarray[n], hummin, hummax, 100, height-30); // temperature values
     
    
     //noStroke();
     ellipse(xpos1,tempy,2,2); // elipse for temperaure data points
     ellipse(xpos1,exttempy,2,2); // elipse for temperaure data points
-    ellipse(xpos2,humy,2,2); //elipse for humidityvdata point
-
+    ellipse(xpos2,humy,2,2); //elipse for exterior humidity data point
+    ellipse(xpos2,exthumy,2,2); //elipse for humidity data point
     
     }
   } 
