@@ -17,6 +17,7 @@ Running the project
 3.	Open the Arduino IDE application on the computer. Make sure the correct port is selected in the tools menu bar. Load in the Arduino sketch under File - Open, upload it to the Arduino and compile it.
 4.	Open the serial monitor in the tools bar to confirm the temperature and humidity values are being read correctly.
 5.	Load the processing file in processing. The users geo co-ordinates must be entered into the URL on line 125. The file can then be run. A window should appear with 2 graphs, of temperature versus time and humidity versus time. A csv file will created in the processing project directory in the format “year;month;day-hour/minute/seconds”.csv. This will contain a table with the time and the corresponding measured temperature , measured relative humidity, exterior temperature and exterior relative humidity values in degrees Celsius and per cent respectively.
+
 Copyright <2021> <Stephen Byrne>
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
